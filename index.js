@@ -3,6 +3,8 @@ const puppeteer = require("puppeteer");
 const cheerio = require("cheerio");
 const mongoose = require("mongoose");
 
+const Listing = require("./model/Listing");
+
 const scrapingResults = [
   {
     title: "Software Engineer, Core Technology",
@@ -58,10 +60,10 @@ async function scrapeJobDescriptions(listings, page) {
     const compensation = $("p.attrgroup > span:nth-child(1) > b").text();
     listings[i].jobDescription = jobDescription;
     listings[i].compensation = compensation;
-    await sleep(1000); // 1 second sleep
 
-    console.log(listings[i].jobDescription);
-    console.log(listings[i].compensation);
+    const listingModel = new Listing(listings[i]);
+    listingModel.save();
+    await sleep(1000); // 1 second sleep
   }
 }
 
