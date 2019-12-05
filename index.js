@@ -1,5 +1,7 @@
+require('dotenv').config();
 const puppeteer = require("puppeteer");
 const cheerio = require("cheerio");
+const mongoose = require("mongoose");
 
 const scrapingResults = [
   {
@@ -12,6 +14,16 @@ const scrapingResults = [
 
   }
 ]
+
+async function connectToMongoDb() {
+  await mongoose.connect(
+    process.env.DB_DETAIL,
+    { useNewUrlParser: true,
+      useUnifiedTopology: true 
+    }
+  );
+  console.log("connected to mongodb")
+}
 
 async function scrapeListing(page) {
   await page.goto(
@@ -58,6 +70,7 @@ async function sleep(miliseconds) {
 }
 
 async function main() {
+  await connectToMongoDb();
   const browser = await puppeteer.launch({headless: false});
   const page = await browser.newPage();
   const listings = await scrapeListing(page);
