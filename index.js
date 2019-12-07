@@ -5,18 +5,6 @@ const mongoose = require("mongoose");
 
 const Listing = require("./model/Listing");
 
-const scrapingResults = [
-  {
-    title: "Software Engineer, Core Technology",
-    datePosted: new Date("2019-07-26 12:00:00"),
-    neighborhood: "(san mateo)",
-    url: "https://sfbay.craigslist.org/pen/sof/d/san-mateo-software-engineer-core/7024001832.html",
-    jobDescription: "IXL Learning, a leading edtech company with products used by 8 million students worldwide, is seeking Software Engineers who have a passion for technology and...",
-    compensation: "Competitive salary and benefits",
-
-  }
-]
-
 async function connectToMongoDb() {
   await mongoose.connect(
     process.env.DB_DETAIL,
@@ -25,6 +13,30 @@ async function connectToMongoDb() {
     }
   );
   console.log("connected to mongodb")
+}
+
+async function loginPage(page) {
+  try {
+    const waitforNav = page.waitForNavigation({ waitUntil: 'networkidle0' ,timeout: 5000});
+    await page.goto(process.env.TARGETPAGE);
+    await page.type("input#uid", process.env.USERN);
+    await page.type("input#pwd", process.env.PASS);
+    await page.click("#hero .btn-primary");
+
+    await sleep(5000); // 5 second sleep
+    await page.click("#onSubmit_noshowft");
+    return page;
+  } catch (error) {
+    console.log(error);
+  } 
+}
+
+async function getData(page) {
+  console.log(await page.evaluate(() => {
+    centerPopup('popupBrokerSum');
+    loadPopup('popupBrokerSum');
+    pop_brokersum_fullmenu();
+  }));
 }
 
 async function scrapeListing(page) {
@@ -75,9 +87,10 @@ async function main() {
   await connectToMongoDb();
   const browser = await puppeteer.launch({headless: false});
   const page = await browser.newPage();
-  const listings = await scrapeListing(page);
-  const listingsWithJobDescriptions = await scrapeJobDescriptions(listings, page);
-  // console.log(listings);
+  const authenticate = await loginPage(page);
+  const getTLKMList = await getData(authenticate);
+  // const listings = await scrapeListing(page);
+  // const listingsWithJobDescriptions = await scrapeJobDescriptions(listings, page);
 }
 
 
