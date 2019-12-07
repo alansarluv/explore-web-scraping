@@ -22,6 +22,8 @@
     "dotenv": "^8.2.0",
     "jest": "^24.9.0",
     "mongoose": "^5.7.13",
-    "puppeteer": "^2.0.0"
+    "puppeteer": "^2.0.0",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.5"
   }
 }
