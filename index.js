@@ -31,12 +31,46 @@ async function loginPage(page) {
   } 
 }
 
-async function getData(page) {
+async function getData(listData, page) {
+  // open broker summary pop up
   console.log(await page.evaluate(() => {
     centerPopup('popupBrokerSum');
     loadPopup('popupBrokerSum');
     pop_brokersum_fullmenu();
   }));
+
+  // select date from, Net mode, all investor region, and regular market
+  await page.evaluate( () => {
+    const dateFrom = document.getElementById("pop_bas_from");
+    dateFrom.value = "20191203";
+  })
+  await page.select('#pop_basInvestor', 'all');
+  await page.select('#pop_basMode', 'NET');
+  await page.select('#pop_basBoard', 'RG');  
+
+  // select each list of stock
+  for (let i = 0; i<listData.length; i++) {
+    await page.evaluate( () => {
+      const stockName = document.getElementById("pop_brokersum_stock");
+      stockName.value = "";
+    })
+    await page.type("#pop_brokersum_stock", listData[i]);
+    await page.click("input.button.grey[type='button'][value='SHOW']");
+    await sleep(5000); // 5 second sleep
+
+    // get each broker summary data
+    const html = await page.content();
+    const $ = cheerio.load(html);
+    const firstRowAccum = $("#pop_tblBrokerSum tr:eq(0) td:lt(4)").map(function(){
+      return $(this).text();
+    }).get();
+
+    const firstRowDist =$("#pop_tblBrokerSum tr:eq(0) td:gt(5):lt(8)").map(function(){
+      return $(this).text();
+    }).get();
+    
+    console.log(firstRowAccum, firstRowDist);
+  }
 }
 
 async function scrapeListing(page) {
@@ -88,7 +122,8 @@ async function main() {
   const browser = await puppeteer.launch({headless: false});
   const page = await browser.newPage();
   const authenticate = await loginPage(page);
-  const getTLKMList = await getData(authenticate);
+  const listData = ["TDPM", "SPTO", "SMKL"];
+  const getTLKMList = await getData(listData, authenticate);
   // const listings = await scrapeListing(page);
   // const listingsWithJobDescriptions = await scrapeJobDescriptions(listings, page);
 }
