@@ -61,15 +61,22 @@ async function getData(listData, page) {
     // get each broker summary data
     const html = await page.content();
     const $ = cheerio.load(html);
-    const firstRowAccum = $("#pop_tblBrokerSum tr:eq(0) td:lt(4)").map(function(){
-      return $(this).text();
+    const resTopAcc = [];
+    const top5Accum = $("#pop_tblBrokerSum tr").filter( i => i < 5);
+    top5Accum.map(function(){
+      const brokerAcc = $(this).find("td").filter( i => i < 4);
+      const brokerAccRow = [];
+      brokerAcc.map( function() {
+        brokerAccRow.push($(this).text());
+      });
+      resTopAcc.push(brokerAccRow);
     }).get();
-
-    const firstRowDist =$("#pop_tblBrokerSum tr:eq(0) td:gt(5):lt(8)").map(function(){
-      return $(this).text();
+    console.log(resTopAcc);
+    const firstRowDist =$("#pop_tblBrokerSum tr").map(function(){
+      // return $(this).text();
     }).get();
     
-    console.log(firstRowAccum, firstRowDist);
+    // console.log(firstRowAccum, firstRowDist);
   }
 }
 
@@ -119,10 +126,10 @@ async function sleep(miliseconds) {
 
 async function main() {
   await connectToMongoDb();
-  const browser = await puppeteer.launch({headless: false});
+  const browser = await puppeteer.launch({headless: false, devtools: false});
   const page = await browser.newPage();
   const authenticate = await loginPage(page);
-  const listData = ["TDPM", "SPTO", "SMKL"];
+  const listData = ["TDPM"]; //, "SPTO", "SMKL"
   const getTLKMList = await getData(listData, authenticate);
   // const listings = await scrapeListing(page);
   // const listingsWithJobDescriptions = await scrapeJobDescriptions(listings, page);
